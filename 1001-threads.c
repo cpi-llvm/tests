@@ -14,8 +14,8 @@ int main(int argc, char **argv)
   pthread_t     thread;
   struct rlimit rlim;
 
-  rlim.rlim_cur = 20 * 1024 * 1024;
-  rlim.rlim_max = 20 * 1024 * 1024;
+  rlim.rlim_cur = 70 * 1024 * 1024;
+  rlim.rlim_max = 70 * 1024 * 1024;
   setrlimit(RLIMIT_AS, &rlim);
 
   for (i = 0; i < 100000; ++i) {
