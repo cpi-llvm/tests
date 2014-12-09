@@ -80,6 +80,10 @@ check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\
 check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
 
 # check 10000 unsafe stack allocation for memory leak
+check -lpthread 1001-threads.c
+check -lpthread -fPIC 1001-threads.c
+check -lpthread -fsafe-stack 1001-threads.c
+check -lpthread -fsafe-stack -fPIC 1001-threads.c
 
 # cleanup
-# rm -f bin stdout *.so
+rm -f bin stdout *.so
