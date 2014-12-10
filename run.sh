@@ -2,6 +2,11 @@
 
 export LD_LIBRARY_PATH="$PWD"
 
+case $(uname) in
+	FreeBSD) DL="" ;;
+	Linux) DL="-ldl" ;;
+esac
+
 cmd() {
     echo "$@"
     "$@"
@@ -9,10 +14,12 @@ cmd() {
 
 check() {
     cmd "$CC" -O0 -g "$@" -o bin
-    ./bin >stdout stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
+    timeout -s 9 -k 0 $TIMEOUT ./bin >stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
     grep -q "Hello ./bin" stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
     rm -f bin stdout
 }
+
+TIMEOUT=2s
 
 # checks the availability of unsafe variables in the main thread
 check basic.c
@@ -62,24 +69,42 @@ check -fsafe-stack -fPIC link.c -L. -lhello-safestack
 check -fsafe-stack -fPIC link.c -L. -lhello-pthread-safestack
 
 # check dlopen
-check -ldl dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
-check -ldl dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
-check -ldl dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
-check -ldl dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
-check -ldl -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
-check -ldl -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
-check -ldl -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
-check -ldl -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
-check -ldl -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
-check -ldl -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
-check -ldl -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
-check -ldl -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
-check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
-check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
-check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
-check -ldl -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+check $DL dlopen.c -DSHARED_LIBRARY=\"./libhello.so\"
+check $DL dlopen.c -DSHARED_LIBRARY=\"./libhello-pthread.so\"
+check $DL dlopen.c -DSHARED_LIBRARY=\"./libhello-safestack.so\"
+check $DL dlopen.c -DSHARED_LIBRARY=\"./libhello-pthread-safestack.so\"
+check $DL -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+check $DL -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fsafe-stack dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+
+check $DL dlopen.c -lpthread -DSHARED_LIBRARY=\"./libhello.so\"
+check $DL dlopen.c -lpthread -DSHARED_LIBRARY=\"./libhello-pthread.so\"
+check $DL dlopen.c -lpthread -DSHARED_LIBRARY=\"./libhello-safestack.so\"
+check $DL dlopen.c -lpthread -DSHARED_LIBRARY=\"./libhello-pthread-safestack.so\"
+check $DL -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+check $DL -fsafe-stack dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fsafe-stack dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fsafe-stack dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fsafe-stack dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-safestack.so\"
+check $DL -fsafe-stack -fPIC dlopen.c -lpthread -DSHARED_LIBRARY=\"libhello-pthread-safestack.so\"
 
 # check 10000 unsafe stack allocation for memory leak
+TIMEOUT=20s
 check -lpthread 1001-threads.c
 check -lpthread -fPIC 1001-threads.c
 check -lpthread -fsafe-stack 1001-threads.c
