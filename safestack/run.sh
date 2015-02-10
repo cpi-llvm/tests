@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 export LD_LIBRARY_PATH="$PWD"
 
@@ -7,6 +7,16 @@ case $(uname) in
 	Linux) DL="-ldl" ;;
 esac
 
+if [[ "$CC" = "" ]] ; then
+    CC=$(which cc)
+fi
+
+if [[ "$TIMEOUT" = "" ]] ; then
+    TIMEOUT=10s
+fi
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:."
+
 cmd() {
     echo "$@"
     "$@"
@@ -14,7 +24,8 @@ cmd() {
 
 check() {
     cmd "$CC" -O0 -g "$@" -o bin &&
-    timeout -s 9 -k 0 $TIMEOUT ./bin >stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
+    #timeout -s 9 -k 0 $TIMEOUT ./bin >stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
+    ./bin >stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
     grep -q "Hello ./bin" stdout || { echo -e "  \e[31mFAIL\e[m"; return; }
     rm -f bin stdout
 }
