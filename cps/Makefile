@@ -1,9 +1,19 @@
 BIN ?= ~/develop/builds/cps/bin
 CC = $(BIN)/clang
+CXX = $(BIN)/clang++
 DIS = $(BIN)/llvm-dis
-CFLAGS = -flto -fcps
+CFLAGS = -flto -fcps -O0
+CXXFLAGS = -flto -fcps -O0 -std=c++11
 
-all: basic.ll basic
+BINARIES = basic \
+	   arg_fct \
+	   vtable
+LL_FILES = $(BINARIES:%=%.ll)
+
+all: $(LL_FILES) $(BINARIES)
+
+%.bc: %.cc
+	$(CXX) $(CXXFLAGS) -c -emit-llvm $< -o $@
 
 %.bc: %.c
 	$(CC) $(CFLAGS) -c -emit-llvm $< -o $@
@@ -13,6 +23,9 @@ all: basic.ll basic
 
 %: %.c
 	$(CC) $(CFLAGS) $< -o $@
+
+%: %.cc
+	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:
 	rm -f *.ll *.bc
