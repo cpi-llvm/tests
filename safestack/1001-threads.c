@@ -5,7 +5,10 @@
 
 static void *start(void *str)
 {
-  return NULL;
+  void *arr[2] = {(void*) 1, (void*) 2};
+  void *val = arr[((int)str) % 2];
+  printf("%p\n", val);
+  return val;
 }
 
 int main(int argc, char **argv)
